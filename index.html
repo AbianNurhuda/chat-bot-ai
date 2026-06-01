@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSAI - Asisten Obrolan Melayang</title>
+    
+    <!-- Google Fonts Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols Rounded for Premium Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    
+    <!-- Unified CSS Design System -->
+    <link rel="stylesheet" href="widget.css">
+</head>
+<body data-theme="light">
+
+    <!-- Floating Chat Widget Container Only -->
+    <div class="chatbot-wrapper">
+        
+        <!-- Floating Action Button (FAB) -->
+        <button class="chatbot-fab" id="chatbot-fab" aria-label="Hubungi Asisten Virtual" onclick="window.chatbot.toggleChat()">
+            <svg class="fab-icon-chat" viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 14a7 7 0 0 1 14 0" stroke="var(--gold)" stroke-width="1.5"></path>
+                <rect x="6" y="10" width="12" height="10" rx="3" fill="none"></rect>
+                <circle cx="9.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                <circle cx="14.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                <path d="M10.5 17.5c.5.5 2.5.5 3 0" stroke-width="1.5"></path>
+                <rect x="4" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                <rect x="18" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                <line x1="12" y1="10" x2="12" y2="6" stroke-width="2"></line>
+                <path d="M10 5h4M12 3v4" stroke="var(--gold)" stroke-width="2"></path>
+            </svg>
+            <span class="material-symbols-rounded fab-icon-close">keyboard_arrow_down</span>
+            <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+        </button>
+
+        <!-- Floating Chat Overlay Window -->
+        <div class="chatbot-window" id="chatbot-window">
+            
+            <!-- Chat Header (Teal Background) -->
+            <div class="chat-header">
+                <div class="bot-info">
+                    <div class="avatar-wrapper">
+                        <!-- Navy & Gold Robot SVG Avatar -->
+                        <svg class="bot-avatar" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 14a7 7 0 0 1 14 0" stroke="var(--gold)" stroke-width="1.5"></path>
+                            <rect x="6" y="10" width="12" height="10" rx="3" fill="none"></rect>
+                            <circle cx="9.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                            <circle cx="14.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                            <path d="M10.5 17.5c.5.5 2.5.5 3 0" stroke-width="1.5"></path>
+                            <rect x="4" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                            <rect x="18" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                            <line x1="12" y1="10" x2="12" y2="6" stroke-width="2"></line>
+                            <path d="M10 5h4M12 3v4" stroke="var(--gold)" stroke-width="2"></path>
+                        </svg>
+                        <span class="online-indicator"></span>
+                    </div>
+                    <div class="bot-details">
+                        <h4>RSAU dr. M. Salamun</h4>
+                        <span>Asisten Virtual Pelayanan</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="sound-toggle-btn" title="Matikan Suara" onclick="window.chatbot.toggleSound()">
+                        <span class="material-symbols-rounded" id="sound-icon">volume_up</span>
+                    </button>
+                    <button class="header-btn minimize-btn-header" title="Kecilkan Chat" onclick="window.chatbot.toggleChat()">
+                        <span class="material-symbols-rounded">keyboard_arrow_down</span>
+                    </button>
+                    <button class="header-btn" title="Tutup Chat" onclick="window.chatbot.handleHeaderClose()">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- View 1: Pre-Chat Form (Sign In) -->
+            <div class="pre-chat-container" id="pre-chat-container">
+                <div class="pre-chat-intro">
+                    <div class="intro-avatar-circle">
+                        <!-- Navy & Gold Robot SVG Avatar -->
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 14a7 7 0 0 1 14 0" stroke="var(--gold)" stroke-width="1.5"></path>
+                            <rect x="6" y="10" width="12" height="10" rx="3" fill="none"></rect>
+                            <circle cx="9.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                            <circle cx="14.5" cy="14.5" r="1.2" fill="var(--gold)" stroke="none"></circle>
+                            <path d="M10.5 17.5c.5.5 2.5.5 3 0" stroke-width="1.5"></path>
+                            <rect x="4" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                            <rect x="18" y="12" width="2" height="4" rx="1" fill="var(--gold)" stroke="none"></rect>
+                            <line x1="12" y1="10" x2="12" y2="6" stroke-width="2"></line>
+                            <path d="M10 5h4M12 3v4" stroke-var="var(--gold)" stroke-width="2"></path>
+                        </svg>
+                    </div>
+                    <h4>Mulai Obrolan Asisten</h4>
+                    <p>Silakan isi informasi singkat di bawah untuk terhubung dan berkonsultasi dengan Asisten Virtual RSAU dr. M. Salamun.</p>
+                </div>
+                <form class="pre-chat-form" id="pre-chat-form" onsubmit="window.chatbot.handlePreChatSubmit(event)">
+                    <div class="form-group">
+                        <label for="pre-chat-name">Nama Lengkap</label>
+                        <input type="text" id="pre-chat-name" placeholder="Contoh: Budi Santoso" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pre-chat-email">Alamat Email</label>
+                        <input type="email" id="pre-chat-email" placeholder="budi@domain.com" required 
+                               title="Masukkan format email yang benar (contoh: budi@domain.com)">
+                    </div>
+                    <div class="form-group">
+                        <label for="pre-chat-phone">Nomor Telepon</label>
+                        <input type="tel" id="pre-chat-phone" placeholder="Contoh: 08123456789" required
+                               inputmode="numeric" pattern="[0-9]*" title="Masukkan nomor telepon berupa angka saja (contoh: 08123456789)">
+                    </div>
+                    <button type="submit" class="pre-chat-submit-btn">KIRIM & MULAI CHAT</button>
+                </form>
+            </div>
+
+            <!-- View 2: Chat Timeline Interface -->
+            <div class="chat-interface-container" id="chat-interface-container" style="display: none;">
+                <!-- Chat Message Body -->
+                <div class="chat-body" id="chat-body">
+                    <div class="message-timeline" id="message-timeline">
+                        <!-- Messages dynamically populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Shortcut Emojis Drawer -->
+                <div class="emoji-drawer" id="emoji-drawer">
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('🏥')">🏥</button>
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('👨‍⚕️')">👨‍⚕️</button>
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('📞')">📞</button>
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('👍')">👍</button>
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('👋')">👋</button>
+                    <button class="emoji-drawer-btn" type="button" onclick="window.chatbot.insertEmoji('😊')">😊</button>
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="chat-footer">
+                    <form class="chat-input-form" id="chat-input-form" onsubmit="window.chatbot.handleSendMessage(event)">
+                        <input type="text" id="chat-input" placeholder="Tulis pesan atau tanya seputar layanan RS..." autocomplete="off" required>
+                        <button type="submit" class="send-btn" id="send-btn" title="Kirim Pesan">
+                            <span class="material-symbols-rounded">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- View 3: Reset Confirmation Modal Overlay -->
+            <div class="confirm-modal-overlay" id="confirm-modal-overlay" style="display: none;">
+                <div class="confirm-modal-card">
+                    <span class="material-symbols-rounded modal-warn-icon">warning</span>
+                    <h5>Akhiri Sesi Obrolan?</h5>
+                    <p id="confirm-modal-text">Apakah Anda yakin ingin menyelesaikan sesi asisten medis ini? Riwayat percakapan Anda akan diatur ulang dari awal.</p>
+                    <div class="confirm-modal-actions">
+                        <button class="confirm-btn btn-continue" id="confirm-btn-no" onclick="window.chatbot.closeConfirmAction('continue')">Tidak</button>
+                        <button class="confirm-btn btn-end" id="confirm-btn-yes" onclick="window.chatbot.closeConfirmAction('end')">Ya, Akhiri</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Client Logic Bundle -->
+    <script src="widget.js"></script>
+</body>
+</html>
