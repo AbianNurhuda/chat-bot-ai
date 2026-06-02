@@ -42,10 +42,10 @@ class FloatingChatbot {
         this.lastUserMessageText = null;
         this.lastUserMessageTime = null;
 
-        // Timers & Inactivity intervals (60 seconds timeout)
+        // Timers & Inactivity intervals (Total 60 seconds)
         this.inactivityTimer = null;
         this.warningTimer = null;
-        this.inactivityTimeoutMs = 60000;
+        this.inactivityTimeoutMs = 50000; // 50 detik idle sebelum peringatan
 
         // API Base URL
         this.apiBase = 'http://localhost:3000';
@@ -489,10 +489,10 @@ class FloatingChatbot {
             this.incrementNotificationBadge();
         }
 
-        // Wait another 10s before auto-ending
+        // Tunggu 10 detik lagi sebelum benar-benar mengakhiri sesi (Total 60s)
         this.warningTimer = setTimeout(() => {
             this.autoEndSession();
-        }, this.inactivityTimeoutMs);
+        }, 10000);
     }
 
     autoEndSession() {
