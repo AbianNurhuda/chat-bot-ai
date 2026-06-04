@@ -42,10 +42,10 @@ class FloatingChatbot {
         this.lastUserMessageText = null;
         this.lastUserMessageTime = null;
 
-        // Timers & Inactivity intervals (Total 60 seconds)
+        // Timers & Inactivity intervals (Total 120 seconds)
         this.inactivityTimer = null;
         this.warningTimer = null;
-        this.inactivityTimeoutMs = 50000; // 50 detik idle sebelum peringatan
+        this.inactivityTimeoutMs = 110000; // 110 detik idle sebelum peringatan
 
         // API Base URL
         this.apiBase = 'http://localhost:3000';

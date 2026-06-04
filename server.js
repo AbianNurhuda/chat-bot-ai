@@ -1,88 +1,88 @@
 /** 
- * RSAI - Backend Server dengan Ollama LLM (Gratis & Local) 
- * Node.js Express + Ollama + MySQL 
+ * RSAI - Backend Server dengan Llama API Server
+ * Node.js Express + Llama API + MySQL 
  */ 
  
- require('dotenv').config(); 
- const express = require('express'); 
- const mysql = require('mysql2'); 
- const cors = require('cors'); 
- const { v4: uuidv4 } = require('uuid'); 
+require('dotenv').config(); 
+const express = require('express'); 
+const mysql = require('mysql2'); 
+const cors = require('cors'); 
+const { v4: uuidv4 } = require('uuid'); 
  
- const app = express(); 
- const port = process.env.PORT || 3000; 
+const app = express(); 
+const port = process.env.PORT || 3000; 
  
- // ============================================ 
- // MIDDLEWARE 
- // ============================================ 
- app.use(cors()); 
- app.use(express.json()); 
+// ============================================ 
+// MIDDLEWARE 
+// ============================================ 
+app.use(cors()); 
+app.use(express.json()); 
  
- app.use((req, res, next) => { 
-     res.setHeader( 
-         "Content-Security-Policy", 
-         "default-src 'self' http://localhost:3000; " + 
-         "script-src 'self' 'unsafe-inline'; " + 
-         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + 
-         "font-src 'self' https://fonts.gstatic.com; " + 
-         "connect-src 'self' http://localhost:3000 ws://localhost:*;" 
-     ); 
-     next(); 
- }); 
+app.use((req, res, next) => { 
+    res.setHeader( 
+        "Content-Security-Policy", 
+        "default-src 'self' http://localhost:3000; " + 
+        "script-src 'self' 'unsafe-inline'; " + 
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + 
+        "font-src 'self' https://fonts.gstatic.com; " + 
+        "connect-src 'self' http://localhost:3000 ws://localhost:*;" 
+    ); 
+    next(); 
+}); 
  
- app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.status(404).end()); 
- app.get('/favicon.ico', (req, res) => res.status(204).end()); 
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.status(404).end()); 
+app.get('/favicon.ico', (req, res) => res.status(204).end()); 
  
- // ============================================ 
- // DATABASE CONNECTION 
- // ============================================ 
- const db = mysql.createPool({ 
-     host: process.env.DB_HOST || 'localhost', 
-     user: process.env.DB_USER || 'root', 
-     password: process.env.DB_PASSWORD || '', 
-     database: process.env.DB_NAME || 'ai_testing', 
-     waitForConnections: true, 
-     connectionLimit: 10, 
-     queueLimit: 0 
- }); 
+// ============================================ 
+// DATABASE CONNECTION 
+// ============================================ 
+const db = mysql.createPool({ 
+    host: process.env.DB_HOST || 'localhost', 
+    user: process.env.DB_USER || 'root', 
+    password: process.env.DB_PASSWORD || '', 
+    database: process.env.DB_NAME || 'ai_testing', 
+    waitForConnections: true, 
+    connectionLimit: 10, 
+    queueLimit: 0 
+}); 
  
- // Initialize Database Table 
- db.getConnection((err, connection) => { 
-     if (err) { 
-         console.error('❌ Error connecting to MySQL:', err.message); 
-         return; 
-     } 
-     console.log('✅ Connected to MySQL'); 
+// Initialize Database Table 
+db.getConnection((err, connection) => { 
+    if (err) { 
+        console.error('❌ Error connecting to MySQL:', err.message); 
+        return; 
+    } 
+    console.log('✅ Connected to MySQL'); 
  
-     const createTableSql = ` 
-         CREATE TABLE IF NOT EXISTS ai_history ( 
-             uuid VARCHAR(36) PRIMARY KEY, 
-             nama VARCHAR(255), 
-             email VARCHAR(255), 
-             notelp VARCHAR(20), 
-             session_id VARCHAR(255), 
-             user_message TEXT, 
-             agent_message TEXT, 
-             source VARCHAR(20) DEFAULT 'ollama', 
-             created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
-             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
-         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
-     `; 
+    const createTableSql = ` 
+        CREATE TABLE IF NOT EXISTS ai_history ( 
+            uuid VARCHAR(36) PRIMARY KEY, 
+            nama VARCHAR(255), 
+            email VARCHAR(255), 
+            notelp VARCHAR(20), 
+            session_id VARCHAR(255), 
+            user_message TEXT, 
+            agent_message TEXT, 
+            source VARCHAR(20) DEFAULT 'llama_api', 
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+    `; 
  
-     connection.query(createTableSql, (err) => { 
-         if (err) { 
-             console.error('❌ Error creating table:', err.message); 
-         } else { 
-             console.log("✅ Table 'ai_history' ready"); 
-         } 
-         connection.release(); 
-     }); 
- }); 
+    connection.query(createTableSql, (err) => { 
+        if (err) { 
+            console.error('❌ Error creating table:', err.message); 
+        } else { 
+            console.log("✅ Table 'ai_history' ready"); 
+        } 
+        connection.release(); 
+    }); 
+}); 
  
- // ============================================ 
- // SYSTEM PROMPT 
- // ============================================ 
- const SYSTEM_PROMPT = `Anda adalah Dr. M. Salamun, asisten virtual dari RSAU dr. M. Salamun, Bandung. 
+// ============================================ 
+// SYSTEM PROMPT 
+// ============================================ 
+const SYSTEM_PROMPT = `Anda adalah Dr. M. Salamun, asisten virtual dari RSAU dr. M. Salamun, Bandung. 
  
  IDENTITAS: 
  - Nama: Dr. M. Salamun (asisten virtual) 
@@ -93,7 +93,6 @@
  INFORMASI RS: 
  - Alamat: Jl. Ciumbuleuit No.203, Bandung 
  - Telepon: (022) 2032090 
- - WhatsApp: [nomor RS jika ada] 
  - Jam IGD: 24 jam 
  - Jam Poliklinik: Senin-Jumat 07:30-14:00, Jumat 07:30-14:30 
  - Layanan: IGD, Rawat Inap, Poliklinik Spesialis, Lab, Radiologi, Farmasi 24 Jam 
@@ -104,176 +103,174 @@
  3. Gunakan salam pembuka seperti "Halo", "Selamat pagi", "Selamat siang" 
  4. Jangan berikan diagnosis medis - arahkan ke dokter 
  5. Untuk pertanyaan medis, selalu sarankan konsultasi langsung dengan dokter RS 
- 6. Akhiri respons dengan pertanyaan ramah seperti "Apakah ada yang bisa saya bantu lagi?" atau "Ada pertanyaan lainnya?" 
+ 6. Akhiri respons dengan pertanyaan ramah seperti "Apakah ada yang bisa saya bantu lagi?" atau "Ada pertanyaan lainnya?"`; 
  
- CONTOH RESPONS: 
+// ============================================ 
+// ENDPOINT 1: Save Chat (Legacy) 
+// ============================================ 
+app.post('/save-chat', (req, res) => { 
+    const { nama, email, notelp, chat_in, chat_out } = req.body; 
  
- Q: Jam berapa RS buka? 
- A: Halo! RSAU dr. M. Salamun buka 24 jam untuk layanan IGD (Instalasi Gawat Darurat). 
- Sedangkan untuk poliklinik umum, kami melayani Senin-Jumat pukul 07:30-14:00, dan Jumat pukul 07:30-14:30. 
- Apakah ada yang bisa saya bantu lagi? 
+    if (!nama || !email || !notelp) { 
+        return res.status(400).json({ 
+            status: 'error', 
+            message: 'Nama, Email, dan No Telp wajib diisi.' 
+        }); 
+    } 
  
- Q: Saya mau konsultasi dengan dokter, bagaimana caranya? 
- A: Baik! Untuk konsultasi dengan dokter di RSAU dr. M. Salamun, Anda bisa: 
- 1. Datang langsung ke poliklinik kami di Jl. Ciumbuleuit No.203, Bandung 
- 2. Menghubungi kami di (022) 2032090 
- 3. Jika ada keadaan darurat, langsung ke IGD kami (buka 24 jam) 
+    const uuid = uuidv4(); 
+    const sql = ` 
+        INSERT INTO ai_history ( 
+            uuid, nama, email, notelp, user_message, agent_message, source 
+        ) VALUES (?, ?, ?, ?, ?, ?, 'legacy') 
+    `; 
  
- Pastikan membawa identitas diri dan asuransi jika ada. Apakah ada pertanyaan lain? 
+    db.execute(sql, [uuid, nama, email, notelp, chat_in, chat_out], (err) => { 
+        if (err) { 
+            console.error('❌ Database error:', err.message); 
+            return res.status(500).json({ 
+                status: 'error', 
+                message: 'Gagal menyimpan data: ' + err.message 
+            }); 
+        } 
  
- PERSONALITY NOTES: 
- - Gunakan emoticon sederhana jika sesuai konteks: *senyum*, *wink*, dll 
- - Tampilkan empati terhadap kondisi pasien 
- - Professional namun tetap hangat dan approachable`; 
+        console.log(`✅ Chat saved [UUID: ${uuid}]`); 
+        res.status(201).json({ 
+            status: 'success', 
+            message: 'Chat berhasil disimpan', 
+            uuid: uuid 
+        }); 
+    }); 
+}); 
  
- // ============================================ 
- // ENDPOINT 1: Save Chat (Legacy) 
- // ============================================ 
- app.post('/save-chat', (req, res) => { 
-     const { nama, email, notelp, chat_in, chat_out } = req.body; 
+// ============================================ 
+// ENDPOINT: Chat dengan Llama API Server 
+// ============================================ 
+app.post('/chat-with-llm', async (req, res) => { 
+    const { user_message, session_id, userData } = req.body; 
  
-     if (!nama || !email || !notelp) { 
-         return res.status(400).json({ 
-             status: 'error', 
-             message: 'Nama, Email, dan No Telp wajib diisi.' 
-         }); 
-     } 
+    if (!user_message || !session_id) { 
+        return res.status(400).json({ 
+            status: 'error', 
+            message: 'user_message dan session_id diperlukan' 
+        }); 
+    } 
  
-     const uuid = uuidv4(); 
-     const sql = ` 
-         INSERT INTO ai_history ( 
-             uuid, nama, email, notelp, user_message, agent_message, source 
-         ) VALUES (?, ?, ?, ?, ?, ?, 'legacy') 
-     `; 
+    try { 
+        console.log(`📨 Llama API Request - Session: ${session_id}`); 
+        console.log(`📝 User: ${user_message.substring(0, 50)}...`); 
  
-     db.execute(sql, [uuid, nama, email, notelp, chat_in, chat_out], (err) => { 
-         if (err) { 
-             console.error('❌ Database error:', err.message); 
-             return res.status(500).json({ 
-                 status: 'error', 
-                 message: 'Gagal menyimpan data: ' + err.message 
-             }); 
-         } 
+        const LLAMA_API_URL = process.env.LLAMA_API_URL || 'http://202.150.130.251:8090/v1/chat/completions'; 
+        const LLAMA_API_KEY = process.env.LLAMA_API_KEY || 'simrs_agent_9Vq9Zf2Kp8LmQb4ZaT6rYw3BpD5hGM0JkE1uPi'; 
  
-         console.log(`✅ Chat saved [UUID: ${uuid}]`); 
-         res.status(201).json({ 
-             status: 'success', 
-             message: 'Chat berhasil disimpan', 
-             uuid: uuid 
-         }); 
-     }); 
- }); 
+        const response = await fetch(LLAMA_API_URL, { 
+            method: 'POST', 
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${LLAMA_API_KEY}` 
+            }, 
+            body: JSON.stringify({ 
+                model: 'llama', 
+                messages: [ 
+                    { 
+                        role: 'system', 
+                        content: SYSTEM_PROMPT 
+                    }, 
+                    { 
+                        role: 'user', 
+                        content: user_message 
+                    } 
+                ], 
+                max_tokens: 512, 
+                temperature: 0.7 
+            }) 
+        }); 
  
- // ============================================ 
- // ENDPOINT: Chat dengan Ollama (LOCAL LLM) 
- // ============================================ 
- app.post('/chat-with-llm', async (req, res) => { 
-     const { user_message, session_id, userData } = req.body; 
+        if (!response.ok) { 
+            const errorText = await response.text(); 
+            console.error('❌ API Error Response:', errorText); 
+            throw new Error(`Llama API error: ${response.status} ${response.statusText}`); 
+        } 
  
-     if (!user_message || !session_id) { 
-         return res.status(400).json({ 
-             status: 'error', 
-             message: 'user_message dan session_id diperlukan' 
-         }); 
-     } 
+        const data = await response.json(); 
+        console.log('✅ API Response received'); 
+        
+        // Parse OpenAI-compatible response 
+        const botResponse = data.choices[0].message.content; 
  
-     try { 
-         console.log(`📨 Ollama Request - Session: ${session_id}`); 
-         console.log(`📝 User: ${user_message.substring(0, 50)}...`); 
+        console.log(`✅ Llama API Response Success`); 
  
-         // Call Ollama Local API 
-         const response = await fetch('http://localhost:11434/api/generate', { 
-             method: 'POST', 
-             headers: { 'Content-Type': 'application/json' }, 
-             body: JSON.stringify({ 
-                 model: 'llama2', 
-                 prompt: `${SYSTEM_PROMPT}\n\nUser: ${user_message}`, 
-                 stream: false, 
-                 temperature: 0.7 
-             }) 
-         }); 
- 
-         if (!response.ok) { 
-             throw new Error(`Ollama error: ${response.statusText}`); 
-         } 
- 
-         const data = await response.json(); 
-         const botResponse = data.response; 
- 
-         console.log(`✅ Ollama Response Success`); 
- 
-         // Auto-save ke database 
-         if (userData && userData.name && userData.email && userData.phone) { 
-             const uuid = uuidv4(); 
-             const sql = ` 
-                 INSERT INTO ai_history ( 
-                     uuid, nama, email, notelp, session_id, 
-                     user_message, agent_message, source 
-                 ) VALUES (?, ?, ?, ?, ?, ?, ?, 'ollama') 
-             `; 
+        // Auto-save ke database (Remote Server) 
+        if (userData && userData.name && userData.email && userData.phone) { 
+            const uuid = uuidv4(); 
+            const sql = ` 
+                INSERT INTO ai_history ( 
+                    uuid, nama, email, notelp, session_id, 
+                    user_message, agent_message, source 
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'llama_api') 
+            `; 
              
-             db.execute(sql, [ 
-                 uuid, 
-                 userData.name, 
-                 userData.email, 
-                 userData.phone, 
-                 session_id, 
-                 user_message, 
-                 botResponse 
-             ], (err) => { 
-                 if (err) console.error('❌ DB Error:', err.message); 
-                 else console.log(`✅ Chat Auto-Saved [UUID: ${uuid}]`); 
-             }); 
-         } 
+            db.execute(sql, [ 
+                uuid, 
+                userData.name, 
+                userData.email, 
+                userData.phone, 
+                session_id, 
+                user_message, 
+                botResponse 
+            ], (err) => { 
+                if (err) console.error('❌ DB Error:', err.message); 
+                else console.log(`✅ Chat Auto-Saved [UUID: ${uuid}]`); 
+            }); 
+        } 
  
-         res.json({ 
-             status: 'success', 
-             response: botResponse, 
-             timestamp: new Date().toISOString() 
-         }); 
+        res.json({ 
+            status: 'success', 
+            response: botResponse, 
+            timestamp: new Date().toISOString() 
+        }); 
  
-     } catch (error) { 
-         console.error('❌ Ollama Error:', error.message); 
-         res.status(500).json({ 
-             status: 'error', 
-             message: 'Ollama tidak berjalan. Jalankan: ollama serve' 
-         }); 
-     } 
- }); 
+    } catch (error) { 
+        console.error('❌ Llama API Error:', error.message); 
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Gagal mendapatkan respons dari Llama API: ' + error.message 
+        }); 
+    } 
+}); 
  
- // ============================================ 
- // HEALTH CHECK 
- // ============================================ 
- app.get('/health', (req, res) => { 
-     res.status(200).json({ 
-         status: 'ok', 
-         service: 'RSAI Backend + Ollama', 
-         ollama_url: 'http://localhost:11434', 
-         timestamp: new Date().toISOString() 
-     }); 
- }); 
+// ============================================ 
+// HEALTH CHECK 
+// ============================================ 
+app.get('/health', (req, res) => { 
+    res.status(200).json({ 
+        status: 'ok', 
+        service: 'RSAI Backend + Llama API', 
+        llama_url: process.env.LLAMA_API_URL, 
+        timestamp: new Date().toISOString() 
+    }); 
+}); 
  
- // ============================================ 
- // ERROR HANDLING 
- // ============================================ 
- app.use((err, req, res, next) => { 
-     console.error(err.stack); 
-     res.status(500).send('Something broke!'); 
- }); 
+// ============================================ 
+// ERROR HANDLING 
+// ============================================ 
+app.use((err, req, res, next) => { 
+    console.error(err.stack); 
+    res.status(500).send('Something broke!'); 
+}); 
  
- // ============================================ 
- // START SERVER 
- // ============================================ 
- app.listen(port, () => { 
-     console.log(` 
+// ============================================ 
+// START SERVER 
+// ============================================ 
+app.listen(port, () => { 
+    console.log(` 
  ╔════════════════════════════════════════╗ 
  ║   RSAI Backend Server                  ║ 
- ║   Dengan Ollama LLM (Gratis)           ║ 
+ ║   Dengan Llama API (Remote)            ║ 
  ╠════════════════════════════════════════╣ 
  ║   🚀 Server: http://localhost:${port}     ║ 
- ║   📊 Database: ai_testing              ║ 
- ║   🤖 LLM: Ollama (Local)               ║ 
- ║   ✓ Model: llama2 (3.8GB)              ║ 
+ ║   📊 Database: ai_testing (Remote)     ║ 
+ ║   🤖 LLM: Llama API (Remote)           ║ 
  ╚════════════════════════════════════════╝ 
-     `); 
- });
+    `); 
+});
