@@ -144,7 +144,7 @@ app.post('/save-chat', (req, res) => {
 }); 
  
 // ============================================ 
-// ENDPOINT: Chat dengan Llama API Server 
+// ENDPOINT: Chat dengan PHP Backend API 
 // ============================================ 
 app.post('/chat-with-llm', async (req, res) => { 
     const { user_message, session_id, userData } = req.body; 
@@ -157,48 +157,39 @@ app.post('/chat-with-llm', async (req, res) => {
     } 
  
     try { 
-        console.log(`📨 Llama API Request - Session: ${session_id}`); 
+        console.log(`📨 PHP Backend Request - Session: ${session_id}`); 
         console.log(`📝 User: ${user_message.substring(0, 50)}...`); 
  
-        const LLAMA_API_URL = process.env.LLAMA_API_URL || 'http://202.150.130.251:8090/v1/chat/completions'; 
-        const LLAMA_API_KEY = process.env.LLAMA_API_KEY || 'simrs_agent_9Vq9Zf2Kp8LmQb4ZaT6rYw3BpD5hGM0JkE1uPi'; 
+        const PHP_API_URL = process.env.PHP_BACKEND_URL || 'http://202.150.130.251/ai-backend/chat.php'; 
+        const PHP_API_KEY = process.env.PHP_BACKEND_KEY || 'ELV8eyrY9SOw6BcWAo2JRtPN7FTHfix4XsphQmuIb0qUdnk3'; 
  
-        const response = await fetch(LLAMA_API_URL, { 
+        const response = await fetch(PHP_API_URL, { 
             method: 'POST', 
             headers: { 
                 'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${LLAMA_API_KEY}` 
+                'X-API-Key': PHP_API_KEY 
             }, 
             body: JSON.stringify({ 
-                model: 'llama', 
-                messages: [ 
-                    { 
-                        role: 'system', 
-                        content: SYSTEM_PROMPT 
-                    }, 
-                    { 
-                        role: 'user', 
-                        content: user_message 
-                    } 
-                ], 
-                max_tokens: 512, 
-                temperature: 0.7 
+                user_message: user_message,
+                session_id: session_id,
+                system_prompt: SYSTEM_PROMPT // Opsional, tergantung chat.php butuh atau tidak
             }) 
         }); 
  
         if (!response.ok) { 
             const errorText = await response.text(); 
-            console.error('❌ API Error Response:', errorText); 
-            throw new Error(`Llama API error: ${response.status} ${response.statusText}`); 
+            console.error('❌ PHP API Error Response:', errorText); 
+            throw new Error(`PHP Backend API error: ${response.status} ${response.statusText}`); 
         } 
  
         const data = await response.json(); 
-        console.log('✅ API Response received'); 
+        console.log('✅ PHP API Response received'); 
         
-        // Parse OpenAI-compatible response 
-        const botResponse = data.choices[0].message.content; 
+        // Asumsikan chat.php mengembalikan format { status: "success", response: "..." }
+        // Atau sesuaikan dengan response real dari chat.php
+        const botResponse = data.response || data.choices?.[0]?.message?.content || "Maaf, asisten sedang sibuk."; 
  
-        console.log(`✅ Llama API Response Success`); 
+        console.log(`✅ PHP Backend Response Success`); 
  
         // Auto-save ke database (Remote Server) 
         if (userData && userData.name && userData.email && userData.phone) { 
@@ -207,7 +198,7 @@ app.post('/chat-with-llm', async (req, res) => {
                 INSERT INTO ai_history ( 
                     uuid, nama, email, notelp, session_id, 
                     user_message, agent_message, source 
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'llama_api') 
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'php_backend') 
             `; 
              
             db.execute(sql, [ 
@@ -231,10 +222,10 @@ app.post('/chat-with-llm', async (req, res) => {
         }); 
  
     } catch (error) { 
-        console.error('❌ Llama API Error:', error.message); 
+        console.error('❌ PHP Backend Error:', error.message); 
         res.status(500).json({ 
             status: 'error', 
-            message: 'Gagal mendapatkan respons dari Llama API: ' + error.message 
+            message: 'Gagal mendapatkan respons dari PHP Backend: ' + error.message 
         }); 
     } 
 }); 
